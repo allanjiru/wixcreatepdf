@@ -1,0 +1,50 @@
+import { mediaManager } from 'wix-media-backend';
+
+export function savePDF(base64, fileName) {
+    return new Promise((resolve, reject) => {
+        
+        uploadPDF(base64, fileName)
+            .then((file) => {
+
+                getDownloadUrl(file.fileUrl)
+                    .then((downloadUrl) => {
+                        resolve(downloadUrl);
+                    })
+                    .catch((error) => {
+                        reject(error);
+                    });
+            })
+            .catch((error) => {
+                reject(error);
+            });
+    });
+}
+
+export function uploadPDF(base64, fileName) {
+    // create Buffer from Base64
+    const buffer = Buffer.from(base64, 'base64');
+
+    return mediaManager.upload(
+        "/UserUploads",
+        buffer,
+        fileName + ".pdf", {
+            "mediaOptions": {
+                "mimeType": "application/pdf",
+                "mediaType": "document"
+            },
+            "metadataOptions": {
+                "isPrivate": false,
+                "isVisitorUpload": false,
+                "context": {
+                    "someKey1": "someValue1",
+                    "someKey2": "someValue2"
+                }
+            }
+        }
+    );
+}
+
+export async function getDownloadUrl(fileUrl) {
+    const myFileDownloadUrl = await mediaManager.getDownloadUrl(fileUrl, 10);
+    return myFileDownloadUrl;
+}
